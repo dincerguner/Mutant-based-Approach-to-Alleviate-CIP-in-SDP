@@ -11,3 +11,7 @@ The experimentation and data generating scripts, as well as the resulting data a
 * [Software Measures Datasets](Software%20Measures%20Datasets)
 
 * [Scripts](Scripts)
+
+## Rebalancing Software Defect Datasets via Mutation: Performance Insights from Prediction Models based on Software Measures Updates
+
+From the original study, we developed an article (Rebalancing Software Defect Datasets via Mutation: Performance Insights from Prediction Models based on Software Measures Updates) and subsequently extended the work to enhance the reliability of the findings. In this extended study, we incorporated two additional machine learning methods—XGBoost and neural networks. Furthermore, to strengthen the robustness of the results, we repeated the sampling experiments five times using different random seeds.
