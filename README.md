@@ -15,3 +15,18 @@ The experimentation and data generating scripts, as well as the resulting data a
 ## Rebalancing Software Defect Datasets via Mutation: Performance Insights from Prediction Models based on Software Measures Updates
 
 From the original study, we developed an article (Rebalancing Software Defect Datasets via Mutation: Performance Insights from Prediction Models based on Software Measures Updates) and subsequently extended the work to enhance the reliability of the findings. In this extended study, we incorporated two additional machine learning methods—XGBoost and neural networks. Furthermore, to strengthen the robustness of the results, we repeated the sampling experiments five times using different random seeds. In addition, we modified the optimization objective by replacing AUC with the Matthews Correlation Coefficient (MCC). We also introduced confusion matrix–based variables, which enable the derivation of multiple performance metrics, and included the area under the precision–recall curve (AUC-PRC) as an additional evaluation metric.
+
+## Versions
+
+### v.1.1.0
+
+[This version](https://github.com/dincerguner/Mutant-based-Approach-to-Alleviate-CIP-in-SDP/releases/tag/v.1.1.0) includes the extended scripts, datasets, and results within the scope of the article.
+
+Changes: https://github.com/dincerguner/Mutant-based-Approach-to-Alleviate-CIP-in-SDP/pull/1
+
+### v.1.0.0
+
+[This version](https://github.com/dincerguner/Mutant-based-Approach-to-Alleviate-CIP-in-SDP/releases/tag/v.1.0.0) includes the scripts, datasets, and results within the scope of the thesis.
+
+
+
