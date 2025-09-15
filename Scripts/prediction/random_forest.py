@@ -5,7 +5,7 @@ import os
 from performance_measure import calculate_performance_metrics
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.model_selection import GridSearchCV
-from performance_measure import loss_function_auc
+from performance_measure import loss_function_mcc
 from imblearn.pipeline import Pipeline
 from sklearn.metrics import make_scorer
 
@@ -67,7 +67,7 @@ def apply_random_forest_cross_release(
             ]
         )
 
-    custom_scorer = make_scorer(loss_function_auc, greater_is_better=True)
+    custom_scorer = make_scorer(loss_function_mcc, greater_is_better=True)
     kf = StratifiedKFold(n_splits=5, random_state=RANDOM_STATE, shuffle=True)
 
     folds_train = {}
@@ -83,7 +83,7 @@ def apply_random_forest_cross_release(
             estimator=pipeline,
             param_grid=PARAMS,
             cv=[(train_index, val_index)],
-            verbose=-1,
+            verbose=0,
             scoring=custom_scorer,
             refit=False,
             n_jobs=4,
