@@ -1,5 +1,9 @@
+import torch
+import numpy as np
+from torch import nn
+from skorch import NeuralNetClassifier
+from sklearn.pipeline import Pipeline
 from sklearn.model_selection import StratifiedKFold, train_test_split
-from sklearn.svm import SVC
 from dataloader import DataLoader
 import os
 from performance_measure import calculate_performance_metrics
@@ -9,18 +13,43 @@ from performance_measure import loss_function_mcc
 from imblearn.pipeline import Pipeline
 from sklearn.metrics import make_scorer
 
-ML_METHOD = "svm"
+
+class BinaryClassifier(nn.Module):
+    def __init__(self, input_dim=21, dropout=0.3):
+        super().__init__()
+        self.model = nn.Sequential(
+            nn.Linear(input_dim, 64),
+            nn.ReLU(),
+            nn.Dropout(dropout),
+            nn.Linear(64, 32),
+            nn.ReLU(),
+            nn.Dropout(dropout),
+            nn.Linear(32, 1),
+            nn.Sigmoid()
+        )
+    
+    def forward(self, X):
+        return self.model(X)
+
+class BinaryClassifierSampling(BinaryClassifier):
+    def __init__(self, input_dim=21, dropout=0.3):
+        super().__init__(input_dim, dropout)
+    
+    def forward(self, X):
+        out = self.model(X)
+        return out.squeeze(1) 
+
+
+ML_METHOD = "neuralnet"
 RANDOM_STATE = 42
 PARAMS = {
-    # 'dimensionalityreduction__n_components':(8,10,12,14,16),
-    "classification__kernel": ("rbf", "linear", "poly", "sigmoid"),
-    "classification__degree": (0, 1, 2, 3),
-    "classification__coef0": (0, 1, 2, 3),
-    "classification__gamma": ("scale", "auto"),
+    'classification__module__dropout': [0.1, 0.3, 0.5],
+    'classification__lr': [0.001, 0.01],
+    'classification__max_epochs': [20, 30],
 }
 
 
-def apply_svm_cross_release(
+def apply_neuralnet_cross_release(
     dataset_path,
     test_dataset,
     sampling_type,
@@ -46,25 +75,54 @@ def apply_svm_cross_release(
 
     X_train = dataloader.X
     y_train = dataloader.y
+    y_train = y_train.reshape(-1, 1)
     X_test = test_dataloader.X
     y_test = test_dataloader.y
+
     min_max_scaler = MinMaxScaler()
     X_train = min_max_scaler.fit_transform(X_train)
     X_test = min_max_scaler.fit_transform(X_test)
-
+    X_train = X_train.astype('float32')
+    X_test = X_test.astype('float32')   
+    y_train = y_train.astype('float32')
+    # y_test = y_test.astype('float32')
     if is_sampling:
         pipeline = Pipeline(
             [
                 ("sampling", sampling),
                 # ('dimensionalityreduction', dimensionalityreduction),
-                ("classification", SVC(max_iter=10000000)),
+                ("classification", NeuralNetClassifier(
+                                    module=BinaryClassifierSampling,
+                                    module__input_dim=20,
+                                    module__dropout=0.3,
+                                    max_epochs=20,
+                                    lr=0.01,
+                                    optimizer=torch.optim.Adam,
+                                    criterion=nn.BCELoss,
+                                    batch_size=32,
+                                    iterator_train__shuffle=True,
+                                    verbose=0,
+                                    device='cpu'
+                                )),
             ]
         )
     else:
         pipeline = Pipeline(
             [
                 # ('dimensionalityreduction', dimensionalityreduction),
-                ("classification", SVC(max_iter=10000000))
+                ("classification", NeuralNetClassifier(
+                                    module=BinaryClassifier,
+                                    module__input_dim=20,
+                                    module__dropout=0.3,
+                                    max_epochs=20,
+                                    lr=0.01,
+                                    optimizer=torch.optim.Adam,
+                                    criterion=nn.BCELoss,
+                                    batch_size=32,
+                                    iterator_train__shuffle=True,
+                                    verbose=0,
+                                    device='cpu'
+                                ))
             ]
         )
 
@@ -97,6 +155,9 @@ def apply_svm_cross_release(
         y_pred_val = pipeline.predict(folds_val[idx][0])
         y_gt_val = folds_val[idx][1]
         y_pred_test = pipeline.predict(X_test)
+        y_pred_val = np.ravel(y_pred_val)
+        y_gt_val = np.ravel(y_gt_val)
+        y_pred_test = np.ravel(y_pred_test)
 
         output.append(
             calculate_performance_metrics(
@@ -127,6 +188,8 @@ def apply_svm_cross_release(
     pipeline.set_params(**best_params)
     pipeline.fit(folds_train[best_idx][0], folds_train[best_idx][1])
     y_pred_test = pipeline.predict(X_test)
+    y_pred_test = np.ravel(y_pred_test)
+
     output.append(
         calculate_performance_metrics(
             f,

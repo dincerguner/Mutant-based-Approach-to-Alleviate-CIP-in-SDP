@@ -1,5 +1,5 @@
 from sklearn.model_selection import StratifiedKFold, train_test_split
-from sklearn.svm import SVC
+from xgboost import XGBClassifier
 from dataloader import DataLoader
 import os
 from performance_measure import calculate_performance_metrics
@@ -9,18 +9,17 @@ from performance_measure import loss_function_mcc
 from imblearn.pipeline import Pipeline
 from sklearn.metrics import make_scorer
 
-ML_METHOD = "svm"
+ML_METHOD = "xgboost"
 RANDOM_STATE = 42
 PARAMS = {
-    # 'dimensionalityreduction__n_components':(8,10,12,14,16),
-    "classification__kernel": ("rbf", "linear", "poly", "sigmoid"),
-    "classification__degree": (0, 1, 2, 3),
-    "classification__coef0": (0, 1, 2, 3),
-    "classification__gamma": ("scale", "auto"),
+    'classification__n_estimators': [100, 200],
+    'classification__max_depth': [3, 5, 7],
+    'classification__learning_rate': [0.01, 0.1, 0.2],
+    'classification__subsample': [0.8, 1.0]
 }
 
 
-def apply_svm_cross_release(
+def apply_xgboost_cross_release(
     dataset_path,
     test_dataset,
     sampling_type,
@@ -57,14 +56,14 @@ def apply_svm_cross_release(
             [
                 ("sampling", sampling),
                 # ('dimensionalityreduction', dimensionalityreduction),
-                ("classification", SVC(max_iter=10000000)),
+                ("classification", XGBClassifier(eval_metric='logloss', random_state=RANDOM_STATE)),
             ]
         )
     else:
         pipeline = Pipeline(
             [
                 # ('dimensionalityreduction', dimensionalityreduction),
-                ("classification", SVC(max_iter=10000000))
+                ("classification", XGBClassifier(eval_metric='logloss', random_state=RANDOM_STATE))
             ]
         )
 

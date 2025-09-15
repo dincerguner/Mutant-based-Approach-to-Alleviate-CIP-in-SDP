@@ -4,6 +4,8 @@ from knn import apply_knn_cross_release
 from naive_bayes import apply_naive_bayes_cross_release
 from random_forest import apply_random_forest_cross_release
 from svm import apply_svm_cross_release
+from xg_boost import apply_xgboost_cross_release
+from nn import apply_neuralnet_cross_release
 
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.decomposition import PCA
@@ -18,7 +20,7 @@ RESULT_CSV_PATH = (
     "../../Performance Results/Stability of MBA/CPDP/performance_irdp_mutated.csv"
 )
 RANDOM_STATE = 42
-TEMP_PATH = "temp"
+TEMP_PATH = "temp2"
 
 
 save_file = PerformanceMeasureCSV(RESULT_CSV_PATH, is_mutated=True)
@@ -212,6 +214,38 @@ for RATIO in RATIOS:
                         print("error")
                     try:
                         out = apply_svm_cross_release(
+                            train_path,
+                            os.path.join(DATA_FOLDER, test),
+                            mbpf_val,
+                            mutation_version,
+                            RATIO,
+                            None,
+                            dimensionalityreduction,
+                            dimensionalityreduction_name,
+                            is_sampling=False,
+                        )
+                        for pmRow in out:
+                            save_file.append_measure(pmRow)
+                    except:
+                        print("error")
+                    try:
+                        out = apply_xgboost_cross_release(
+                            train_path,
+                            os.path.join(DATA_FOLDER, test),
+                            mbpf_val,
+                            mutation_version,
+                            RATIO,
+                            None,
+                            dimensionalityreduction,
+                            dimensionalityreduction_name,
+                            is_sampling=False,
+                        )
+                        for pmRow in out:
+                            save_file.append_measure(pmRow)
+                    except:
+                        print("error")
+                    try:
+                        out = apply_neuralnet_cross_release(
                             train_path,
                             os.path.join(DATA_FOLDER, test),
                             mbpf_val,

@@ -5,7 +5,7 @@ import os
 from performance_measure import calculate_performance_metrics
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.model_selection import GridSearchCV
-from performance_measure import loss_function_auc
+from performance_measure import loss_function_mcc
 from imblearn.pipeline import Pipeline
 from sklearn.metrics import make_scorer
 
@@ -65,7 +65,7 @@ def apply_knn_cross_release(
             ]
         )
 
-    custom_scorer = make_scorer(loss_function_auc, greater_is_better=True)
+    custom_scorer = make_scorer(loss_function_mcc, greater_is_better=True)
     kf = StratifiedKFold(n_splits=5, random_state=RANDOM_STATE, shuffle=True)
 
     folds_train = {}
@@ -81,7 +81,7 @@ def apply_knn_cross_release(
             estimator=pipeline,
             param_grid=PARAMS,
             cv=[(train_index, val_index)],
-            verbose=-1,
+            verbose=0,
             scoring=custom_scorer,
             refit=False,
             n_jobs=4,
@@ -172,7 +172,7 @@ def apply_knn_cross_release(
 #         ('classification', KNeighborsClassifier())
 #     ])
 
-#     custom_scorer = make_scorer(loss_function_auc, greater_is_better=True)
+#     custom_scorer = make_scorer(loss_function_mcc, greater_is_better=True)
 #     kf = StratifiedKFold(n_splits=5, random_state=RANDOM_STATE, shuffle=True)
 
 #     folds_train = {}
@@ -184,7 +184,7 @@ def apply_knn_cross_release(
 #     for idx, (train_index, val_index) in enumerate(kf.split(X_train,y_train)):
 #         folds_train[idx] = (X_train[train_index], y_train[train_index])
 #         folds_val[idx] = (X_train[val_index], y_train[val_index])
-#         grid = GridSearchCV(estimator=pipeline, param_grid=PARAMS, cv=[(train_index, val_index)], verbose=-1, scoring=custom_scorer, refit=False, n_jobs=4)
+#         grid = GridSearchCV(estimator=pipeline, param_grid=PARAMS, cv=[(train_index, val_index)], verbose=0, scoring=custom_scorer, refit=False, n_jobs=4)
 #         grid.fit(X_train, y_train)
 
 #         pipeline.set_params(**grid.best_params_)

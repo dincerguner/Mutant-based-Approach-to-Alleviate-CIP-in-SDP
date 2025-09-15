@@ -4,6 +4,8 @@ from knn import apply_knn_cross_release
 from naive_bayes import apply_naive_bayes_cross_release
 from random_forest import apply_random_forest_cross_release
 from svm import apply_svm_cross_release
+from xg_boost import apply_xgboost_cross_release
+from nn import apply_neuralnet_cross_release
 
 from performance_measure import PerformanceMeasureCSV
 from imblearn.over_sampling import (
@@ -22,8 +24,8 @@ from dataloader import DataLoader
 from collections import Counter
 
 DATA_FOLDER = "../../Software Measures Datasets"
-RESULT_CSV_PATH = "../../Performance Results/Rebalancing Methods/IRDP/performance_irdp_sampling.csv"
-RANDOM_STATE = 42
+RESULT_CSV_PATH = "../../Performance Results/Rebalancing Methods/IRDP/performance_irdp_sampling_71.csv"
+RANDOM_STATE = 71 # 42, 51, 92, 14, 71
 
 save_file = PerformanceMeasureCSV(RESULT_CSV_PATH)
 dataset_mapping = {
@@ -236,6 +238,38 @@ for (
                         print("error")
                     try:
                         out = apply_svm_cross_release(
+                            os.path.join(DATA_FOLDER, train),
+                            os.path.join(DATA_FOLDER, test),
+                            sampling_type,
+                            name,
+                            t_ratio,
+                            sampling,
+                            dimensionalityreduction,
+                            dimensionalityreduction_name,
+                            is_sampling=True,
+                        )
+                        for pmRow in out:
+                            save_file.append_measure(pmRow)
+                    except:
+                        print("error")
+                    try:
+                        out = apply_xgboost_cross_release(
+                            os.path.join(DATA_FOLDER, train),
+                            os.path.join(DATA_FOLDER, test),
+                            sampling_type,
+                            name,
+                            t_ratio,
+                            sampling,
+                            dimensionalityreduction,
+                            dimensionalityreduction_name,
+                            is_sampling=True,
+                        )
+                        for pmRow in out:
+                            save_file.append_measure(pmRow)
+                    except:
+                        print("error")
+                    try:
+                        out = apply_neuralnet_cross_release(
                             os.path.join(DATA_FOLDER, train),
                             os.path.join(DATA_FOLDER, test),
                             sampling_type,

@@ -8,8 +8,8 @@ from imblearn.metrics import geometric_mean_score
 from sklearn.inspection import permutation_importance
 
 
-HEADER = "Dataset,Project,Train Version,Test Version,ML Algorithm,Sampling Type,Sampling Method,Dimensionality Reduction,Defect Ratio,Validation,Test,Parameters,Accuracy,F1,AUC,MCC,Precision,Recall(pd),TNR-Specificity,pf,bal,g-mean,gmeasure"
-HEADER_MUTATED = "Dataset,Project,Train Version,Test Version,ML Algorithm,Max Bug Per File,Mutation Version,Dimensionality Reduction,Defect Ratio,Validation,Test,Parameters,Accuracy,F1,AUC,MCC,Precision,Recall(pd),TNR-Specificity,pf,bal,g-mean,g-measure"
+HEADER = "Dataset,Project,Train Version,Test Version,ML Algorithm,Sampling Type,Sampling Method,Dimensionality Reduction,Defect Ratio,Validation,Test,Parameters,Accuracy,F1,AUC,MCC,Precision,Recall(pd),TNR-Specificity,pf,bal,g-mean,gmeasure,auc-prc,tn,fp,fn,tp"
+HEADER_MUTATED = "Dataset,Project,Train Version,Test Version,ML Algorithm,Max Bug Per File,Mutation Version,Dimensionality Reduction,Defect Ratio,Validation,Test,Parameters,Accuracy,F1,AUC,MCC,Precision,Recall(pd),TNR-Specificity,pf,bal,g-mean,g-measure,auc-prc,tn,fp,fn,tp"
 HEADER_ATTRIBUTES = ",wmc,dit,noc,cbo,rfc,lcom,ca,ce,npm,lcom3,loc,dam,moa,mfa,cam,ic,cbm,amc,max_cc,avg_cc"
 FEATURE_IMPORTANCES_ENABLED = False
 RANDOM_STATE = 42
@@ -82,7 +82,12 @@ class PerformanceMeasureRow:
             self.pf = tokens[19]
             self.bal = tokens[20]
             self.gmean = tokens[21]
-            self.gmeasure = tokens[22][:-1]
+            self.gmeasure = tokens[22]
+            self.auc_prc = tokens[23]
+            self.tn = tokens[24]
+            self.fp = tokens[25]
+            self.fn = tokens[26]
+            self.tp = tokens[27][:-1]
             # TODO :: feature importances is ignored for reading
             self.row_id = (
                 str(self.dataset)
@@ -119,6 +124,11 @@ class PerformanceMeasureRow:
             self.gmean = row[21]
             self.gmeasure = row[22]
             self.importances = row[23]
+            self.auc_prc = row[24]
+            self.tn = row[25]
+            self.fp = row[26]
+            self.fn = row[27]
+            self.tp = row[28]
             self.row_id = (
                 str(self.dataset)
                 + str(self.sampling)
@@ -177,12 +187,23 @@ class PerformanceMeasureRow:
             + str(self.gmean)
             + ","
             + str(self.gmeasure)
+            + ","
+            + str(self.auc_prc)
+            + ","
+            + str(self.tn)
+            + ","
+            + str(self.fp)
+            + ","
+            + str(self.fn)
+            + ","
+            + str(self.tp)
         )
         if self.importances != []:
             return_str += ","
             for i in self.importances:
                 return_str += str(i) + ","
-        return return_str[:-1] + "\n"
+            return_str = return_str[:-1]
+        return return_str + "\n"
 
 
 def calculate_bal(pf, pd):
@@ -226,11 +247,12 @@ def calculate_performance_metrics(
     except:
         print(f)
         tnr = 0
-    tn, fp, _, _ = metrics.confusion_matrix(y_gt, y_pred).ravel()
+    tn, fp, fn, tp = metrics.confusion_matrix(y_gt, y_pred).ravel().tolist()
     pf = fp / (tn + fp)
     bal = calculate_bal(pf, recall)
     gmean = geometric_mean_score(y_true=y_gt, y_pred=y_pred)
     gmeasure = metrics.fowlkes_mallows_score(y_gt, y_pred)
+    auc_prc = metrics.average_precision_score(y_true=y_gt, y_score=y_pred)
 
     result_importances = []
     if FEATURE_IMPORTANCES_ENABLED:
@@ -264,6 +286,11 @@ def calculate_performance_metrics(
             gmean,
             gmeasure,
             result_importances,
+            auc_prc,
+            tn,
+            fp,
+            fn,
+            tp,
         ]
     )
 
@@ -282,6 +309,19 @@ def loss_function_auc(y_gt, y_pred):
         auc = 0
     return auc
 
+def loss_function_auc_prc(y_gt, y_pred):
+    try:
+        auc_prc = metrics.average_precision_score(y_true=y_gt, y_score=y_pred)
+    except:
+        auc_prc = 0
+    return auc_prc
+
+def loss_function_mcc(y_gt, y_pred):
+    try:
+        mcc = metrics.matthews_corrcoef(y_true=y_gt, y_pred=y_pred)
+    except:
+        mcc = 0
+    return mcc
 
 def get_best_index_5split(cv_results):
     idx = cv_results["split0_test_score"].argmax()
